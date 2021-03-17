@@ -1,0 +1,28 @@
+version: '3.4'
+
+services:
+  main:
+    # Makefile sets PROJECT_NAME to current dir name.
+    # add UID to allow multiple users to run this in parallel
+    container_name: ${PROJECT_NAME}_${HOST_UID:-4000}
+    hostname: ${PROJECT_NAME}
+    # Run with user priveleges by default.
+    user: ${HOST_USER:-nodummy}
+    image: ${PROJECT_NAME}:${HOST_USER:-nodummy}
+    build:
+      context: .
+      # Build for current user.
+      target: user
+      # These variables are passed to the Dockerfile.
+      args:
+        - HOST_UID=${HOST_UID:-4000}
+        - HOST_USER=${HOST_USER:-nodummy}
+    command: >
+      gunicorn -c gunicorn.py --reload "app.app:create_app()"
+    # These variables are used in docker-compose and passed into the container
+    env_file:
+      - '.env'
+    ports:
+      - '5000:5000'
+    volumes:
+      - '.:/app'
